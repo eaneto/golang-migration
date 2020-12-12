@@ -13,6 +13,7 @@ func main() {
 	if err != nil {
 		log.Fatal("Connection failed\n", err)
 	}
+
 	defer conn.Close(context.Background())
 	var greeting string
 	err = conn.QueryRow(context.Background(), "select 'Hello, World!'").Scan(&greeting)

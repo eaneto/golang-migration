@@ -1,23 +1,23 @@
 package main
 
 import (
-	"database/sql"
+	"context"
 	"fmt"
 	"log"
 
-	_ "github.com/lib/pq"
+	"github.com/jackc/pgx/v4"
 )
 
 func main() {
-    db, err := sql.Open("postgres", "user:123@tcp(localhost:5432)/todo")
+	conn, err := pgx.Connect(context.Background(), "postgres://user:123@localhost:5432/todo")
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("Connection failed\n", err)
 	}
-	defer db.Close()
-	rows, err := db.Query("SELECT * FROM todo")
+	defer conn.Close(context.Background())
+	var greeting string
+	err = conn.QueryRow(context.Background(), "select 'Hello, World!'").Scan(&greeting)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("QueryRow failed\n", err)
 	}
-	defer rows.Close()
-	fmt.Println(rows)
+	fmt.Println(greeting)
 }

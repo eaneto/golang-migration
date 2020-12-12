@@ -2,7 +2,7 @@ version: '3.3'
 
 services:
   database:
-    container_name: database
+    container_name: todo_database
     image: postgres:latest
     environment:
       POSTGRES_USER: user
@@ -14,7 +14,7 @@ services:
       - postgres-network
 
   pgadmin:
-    container_name: pgadmin
+    container_name: todo_pgadmin
     image: dpage/pgadmin4
     environment:
       PGADMIN_DEFAULT_EMAIL: "user@user.com"

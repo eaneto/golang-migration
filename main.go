@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	db, err := sql.Open("postgres", "root:password@tcp(localhost:5432)/todo")
+    db, err := sql.Open("postgres", "user:123@tcp(localhost:5432)/todo")
 	if err != nil {
 		log.Fatal(err)
 	}

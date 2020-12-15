@@ -1,4 +1,4 @@
-module github.com/eaneto/todo-sql
+module github.com/eaneto/golang-sql
 
 go 1.14
 

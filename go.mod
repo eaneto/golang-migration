@@ -1,4 +1,4 @@
-module github.com/eaneto/golang-sql
+module github.com/eaneto/golang-migration
 
 go 1.14
 

@@ -2,7 +2,6 @@ package main
 
 import (
 	"database/sql"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -21,6 +20,17 @@ func (by ByName) Len() int           { return len(by) }
 func (by ByName) Less(i, j int) bool { return by[i].Name() < by[j].Name() }
 func (by ByName) Swap(i, j int)      { by[i], by[j] = by[j], by[i] }
 
+// Get all files with .sql extension
+func filterSqlFiles(files []os.FileInfo) []os.FileInfo {
+	scripts := []os.FileInfo{}
+	for _, file := range files {
+		if strings.HasSuffix(file.Name(), ".sql") {
+			scripts = append(scripts, file)
+		}
+	}
+	return scripts
+}
+
 func getAllScriptFiles() []os.FileInfo {
 	files, err := ioutil.ReadDir("./migration")
 	if err != nil {
@@ -32,13 +42,7 @@ func getAllScriptFiles() []os.FileInfo {
 		return nil
 	}
 
-	// Get all files with .sql extension
-	scripts := []os.FileInfo{}
-	for _, file := range files {
-		if strings.HasSuffix(file.Name(), ".sql") {
-			scripts = append(scripts, file)
-		}
-	}
+	scripts := filterSqlFiles(files)
 
 	// Sort by file name so scripts are executed on order.
 	sort.Sort(ByName(scripts))
@@ -67,21 +71,19 @@ func executeScript(db *sql.DB, script string) {
 	_, err = db.Exec(script)
 	if err != nil {
 		tx.Rollback()
+		log.Fatal("Error executing script.\n", err)
 	} else {
 		tx.Commit()
 	}
 }
 
 func main() {
-	scripts := readScriptFiles()
-	for _, script := range scripts {
-		fmt.Print(script)
-	}
 	db, err := sql.Open("pgx", DATABASE_URL)
 	if err != nil {
 		log.Fatal("Connection failed\n", err)
 	}
 	defer db.Close()
+	scripts := readScriptFiles()
 	for _, script := range scripts {
 		executeScript(db, script)
 	}

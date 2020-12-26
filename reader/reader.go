@@ -1,7 +1,6 @@
 package reader
 
 import (
-	"database/sql"
 	"io/ioutil"
 	"log"
 	"os"
@@ -14,8 +13,8 @@ import (
 
 // SQLScript Represents a SQL script with the filename and content.
 type SQLScript struct {
-	content string
-	name    string
+	Content string
+	Name    string
 }
 
 type ByName []os.FileInfo
@@ -36,8 +35,8 @@ func ReadScriptFiles() []SQLScript {
 			logrus.Fatal("File not found.\n", err)
 		}
 		data := SQLScript{
-			name:    file.Name(),
-			content: string(content),
+			Name:    file.Name(),
+			Content: string(content),
 		}
 		file_content = append(file_content, data)
 	}
@@ -72,21 +71,4 @@ func getAllScriptFiles() []os.FileInfo {
 	// Sort by file name so scripts are executed on order.
 	sort.Sort(ByName(scripts))
 	return scripts
-}
-
-// ExecuteScript Executes a given SQL script.
-// Every script must be executed inside a transaction.
-func ExecuteScript(db *sql.DB, script SQLScript) {
-	tx, err := db.Begin()
-	if err != nil {
-		log.Fatal("Error starting transaction\n", err)
-	}
-	logrus.Info("Executing script: ", script.name)
-	_, err = db.Exec(script.content)
-	if err != nil {
-		tx.Rollback()
-		log.Fatal("Error executing script.\n", err)
-	} else {
-		tx.Commit()
-	}
 }

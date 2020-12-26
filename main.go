@@ -18,7 +18,7 @@ type SQLScript struct {
 	name    string
 }
 
-const DATABASE_URL = "postgres://user:123@localhost:5432/todo"
+const DATABASE_URL = "postgres://user:123@localhost:5432/"
 
 type ByName []os.FileInfo
 
@@ -95,7 +95,8 @@ func executeScript(db *sql.DB, script SQLScript) {
 
 // TODO Create a table to registered processed scripts.
 func main() {
-	db, err := sql.Open("pgx", DATABASE_URL)
+	databaseName := os.Args[1]
+	db, err := sql.Open("pgx", DATABASE_URL+databaseName)
 	if err != nil {
 		log.Fatal("Connection failed\n", err)
 	}

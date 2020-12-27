@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/eaneto/golang-migration/pkg/reader"
+	"github.com/eaneto/golang-migration/pkg/registry"
 	"github.com/eaneto/golang-migration/pkg/writer"
 
 	_ "github.com/jackc/pgx/v4/stdlib"
@@ -30,25 +31,31 @@ func main() {
 		logrus.Fatal("Error starting transaction.\n", err)
 	}
 
-	createMigrationTable(tx)
+	writer := writer.Writer{
+		Tx: tx,
+		Registry: registry.Registry{
+			Tx: tx,
+		},
+	}
+	createMigrationTable(writer)
 
 	// Process all read scripts
-	err = writer.ProcessScripts(tx, db, scripts)
+	err = writer.ProcessScripts(scripts)
 
 	// Only commits if all operations were succesful.
 	if err != nil {
-		writer.RollbackTransaction(tx)
+		writer.RollbackTransaction()
 	} else {
-		writer.CommitTransaction(tx)
+		writer.CommitTransaction()
 	}
 }
 
 // createMigrationTable Creates the basic migration table.
-func createMigrationTable(tx *sql.Tx) {
-	err := writer.CreateMigrationTable(tx)
+func createMigrationTable(writer writer.Writer) {
+	err := writer.Registry.CreateMigrationTable()
 	if err != nil {
 		logrus.Error("Rollbacking transacation.")
-		err = tx.Rollback()
+		err = writer.Tx.Rollback()
 		if err != nil {
 			logrus.Fatal("Error rollbacking transaction.\n", err)
 		}

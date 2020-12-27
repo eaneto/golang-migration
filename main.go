@@ -12,7 +12,6 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// TODO get user, password and host from CLI
 const DATABASE_URL = "postgres://%s:%s@localhost:5432/%s"
 
 func main() {
@@ -26,7 +25,6 @@ func main() {
 	}
 	defer db.Close()
 	scripts := reader.ReadScriptFiles()
-	// TODO execute all migrations inside one transaction.
 	tx, err := db.Begin()
 	if err != nil {
 		logrus.Fatal("Error starting transaction.\n", err)

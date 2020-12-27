@@ -21,7 +21,7 @@ func main() {
 
 	db, err := sql.Open("pgx", fmt.Sprintf(DATABASE_URL, user, password, database))
 	if err != nil {
-		logrus.Fatal("Connection failed\n", err)
+		logrus.Fatal("Failure stablishing database connection.\n", err)
 	}
 	defer db.Close()
 	scripts := reader.ReadScriptFiles()
@@ -33,8 +33,11 @@ func main() {
 	// Creates the basic migration table.
 	err = createMigrationTable(tx)
 	if err != nil {
-		logrus.Info("Rollbacking transacation.")
-		tx.Rollback()
+		logrus.Error("Rollbacking transacation.")
+		err = tx.Rollback()
+		if err != nil {
+			logrus.Fatal("Error rollbacking transaction.\n", err)
+		}
 		panic(-1)
 	}
 
@@ -43,12 +46,34 @@ func main() {
 
 	// Only commits if all operations were succesful.
 	if err != nil {
-		tx.Rollback()
-		logrus.Error("Migration executed unsuccessfully!")
+		rollbackTransaction(tx)
 	} else {
-		tx.Commit()
-		logrus.Info("Migration executed successfully!")
+		commitTransaction(tx)
 	}
+}
+
+// createMigrationTable Executes the SQL script that creates the migration table.
+func createMigrationTable(tx *sql.Tx) error {
+	script, err := readDefaultMigrationTableScript()
+	if err != nil {
+		return err
+	}
+	_, err = tx.Exec(string(script))
+	if err != nil {
+		logrus.Error("Error creating basic migration table.\n", err)
+		return err
+	}
+	return nil
+}
+
+// readDefaultMigrationTableScript Reads the basic script for the migration table.
+func readDefaultMigrationTableScript() ([]byte, error) {
+	scriptContent, err := ioutil.ReadFile("create_migration_table.sql")
+	if err != nil {
+		logrus.Error("Error reading base migration file.\n", err)
+		return nil, err
+	}
+	return scriptContent, nil
 }
 
 // processScripts Process all given scripts inside a single transaction.
@@ -64,45 +89,21 @@ func processScripts(tx *sql.Tx, db *sql.DB, scripts []reader.SQLScript) error {
 
 // processScript Process a given script inside the given transaction.
 func processScript(tx *sql.Tx, script reader.SQLScript) error {
-	// TODO Check why this is happenning, ReadScriptFiles should never
-	// return and empty script.
-	if script.Name == "" {
-		logrus.Warn("Empty file\n")
-		return nil
-	}
 	isAlreadyProcessed, err := isScriptAlreadyExecuted(tx, script)
 	if err != nil {
-		logrus.Info("Rollbacking transacation.")
 		return err
 	}
-	if !isAlreadyProcessed {
-		err = executeScript(tx, script)
-		if err != nil {
-			logrus.Info("Rollbacking transacation.")
-			return err
-		}
-		err = markScriptAsExecuted(tx, script)
-		if err != nil {
-			logrus.Info("Rollbacking transacation.")
-			return err
-		}
-	} else {
-		logrus.WithField("script_name", script.Name).Info("Script alreayd executed.\n")
-	}
-	return nil
-}
 
-// createMigrationTable Executes the SQL script that creates the migration table.
-func createMigrationTable(tx *sql.Tx) error {
-	scriptContent, err := ioutil.ReadFile("create_migration_table.sql")
-	if err != nil {
-		logrus.Error("Error reading base migration file.\n", err)
-		return err
-	}
-	_, err = tx.Exec(string(scriptContent))
-	if err != nil {
-		logrus.Error("Error creating basic migration table.\n", err)
-		return err
+	// If already processed ignore script and just log.
+	if isAlreadyProcessed {
+		logrus.WithFields(logrus.Fields{
+			"script_name": script.Name,
+		}).Info("Script already executed.")
+	} else {
+		err = executeScriptAndMarkAsExecuted(tx, script)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -122,8 +123,20 @@ func isScriptAlreadyExecuted(tx *sql.Tx, script reader.SQLScript) (bool, error) 
 	return count > 0, nil
 }
 
+// executeScriptAndMarkAsExecuted Executes the given script and mark it as executed.
+func executeScriptAndMarkAsExecuted(tx *sql.Tx, script reader.SQLScript) error {
+	err := executeScript(tx, script)
+	if err != nil {
+		return err
+	}
+	err = markScriptAsExecuted(tx, script)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // executeScript Executes a given SQL script.
-// Every script must be executed inside a transaction.
 func executeScript(tx *sql.Tx, script reader.SQLScript) error {
 	logrus.Info("Executing script: ", script.Name)
 	_, err := tx.Exec(script.Content)
@@ -147,4 +160,22 @@ func markScriptAsExecuted(tx *sql.Tx, script reader.SQLScript) error {
 		return err
 	}
 	return nil
+}
+
+// rollbackTransaction Rollback the given transaction.
+func rollbackTransaction(tx *sql.Tx) {
+	err := tx.Rollback()
+	if err != nil {
+		logrus.Fatal("Error rollbacking transaction.\n", err)
+	}
+	logrus.Error("Migration executed unsuccessfully!")
+}
+
+// commitTransaction Commit to the given transaction.
+func commitTransaction(tx *sql.Tx) {
+	err := tx.Commit()
+	if err != nil {
+		logrus.Fatal("Error commiting transaction.\n", err)
+	}
+	logrus.Info("Migration executed successfully!")
 }

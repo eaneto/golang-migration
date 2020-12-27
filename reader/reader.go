@@ -2,7 +2,6 @@ package reader
 
 import (
 	"io/ioutil"
-	"log"
 	"os"
 	"sort"
 	"strings"
@@ -13,8 +12,10 @@ import (
 
 // SQLScript Represents a SQL script with the filename and content.
 type SQLScript struct {
+	// The actual SQL script content.
 	Content string
-	Name    string
+	// The script filename with the .sql extension.
+	Name string
 }
 
 type ByName []os.FileInfo
@@ -28,28 +29,19 @@ func (by ByName) Swap(i, j int)      { by[i], by[j] = by[j], by[i] }
 func ReadScriptFiles() []SQLScript {
 	files := getAllScriptFiles()
 
-	file_content := make([]SQLScript, len(files))
-	for _, file := range files {
+	scripts := make([]SQLScript, len(files))
+	for index, file := range files {
 		content, err := ioutil.ReadFile("migration/" + file.Name())
 		if err != nil {
-			logrus.Fatal("File not found.\n", err)
+			logrus.WithFields(logrus.Fields{
+				"file_name": file.Name(),
+			}).Fatal("File not found.\n", err)
 		}
-		data := SQLScript{
+		script := SQLScript{
 			Name:    file.Name(),
 			Content: string(content),
 		}
-		file_content = append(file_content, data)
-	}
-	return file_content
-}
-
-// Get all files with .sql extension
-func filterSqlFiles(files []os.FileInfo) []os.FileInfo {
-	scripts := []os.FileInfo{}
-	for _, file := range files {
-		if strings.HasSuffix(file.Name(), ".sql") {
-			scripts = append(scripts, file)
-		}
+		scripts[index] = script
 	}
 	return scripts
 }
@@ -58,11 +50,11 @@ func filterSqlFiles(files []os.FileInfo) []os.FileInfo {
 func getAllScriptFiles() []os.FileInfo {
 	files, err := ioutil.ReadDir("./migration")
 	if err != nil {
-		log.Fatal("Error reading migration directory.\n", err)
+		logrus.Fatal("Error reading migration directory.\n", err)
 	}
 
 	if len(files) == 0 {
-		logrus.Info("Empty directory.\n")
+		logrus.Info("Empty directory, no migrations executed.")
 		return nil
 	}
 
@@ -70,5 +62,16 @@ func getAllScriptFiles() []os.FileInfo {
 
 	// Sort by file name so scripts are executed on order.
 	sort.Sort(ByName(scripts))
+	return scripts
+}
+
+// filterSqlFiles Get all files with .sql extension
+func filterSqlFiles(files []os.FileInfo) []os.FileInfo {
+	scripts := []os.FileInfo{}
+	for _, file := range files {
+		if strings.HasSuffix(file.Name(), ".sql") {
+			scripts = append(scripts, file)
+		}
+	}
 	return scripts
 }

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 
-	"github.com/eaneto/golang-migration/reader"
+	"github.com/eaneto/golang-migration/pkg/reader"
 	"github.com/sirupsen/logrus"
 )
 

@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/eaneto/golang-migration/reader"
-	"github.com/eaneto/golang-migration/writer"
+	"github.com/eaneto/golang-migration/pkg/reader"
+	"github.com/eaneto/golang-migration/pkg/writer"
 
 	_ "github.com/jackc/pgx/v4/stdlib"
 	"github.com/sirupsen/logrus"

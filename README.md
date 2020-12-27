@@ -2,6 +2,11 @@
 
 Very basic tool to manage database migrations for PostgreSQL written in go.
 
+## TODOs
+
+- Unit tests
+- Integration tests (with dockerized database)
+
 ## Usage
 
 ```bash

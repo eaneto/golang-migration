@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/eaneto/golang-migration/pkg/reader"
-	"github.com/eaneto/golang-migration/pkg/registry"
-	"github.com/eaneto/golang-migration/pkg/writer"
+	"github.com/eaneto/grotto/pkg/reader"
+	"github.com/eaneto/grotto/pkg/registry"
+	"github.com/eaneto/grotto/pkg/writer"
 
 	_ "github.com/jackc/pgx/v4/stdlib"
 	"github.com/sirupsen/logrus"

@@ -1,4 +1,4 @@
-module github.com/eaneto/golang-migration
+module github.com/eaneto/grotto
 
 go 1.15
 

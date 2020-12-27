@@ -1,4 +1,4 @@
-# Golang Migration
+# Grotto
 
 Very basic tool to manage database migrations for PostgreSQL written in go.
 
@@ -11,7 +11,7 @@ Very basic tool to manage database migrations for PostgreSQL written in go.
 
 ```bash
 make
-./bin/golang-migration <user> <password> <database_name>
+./bin/grotto <user> <password> <database_name>
 ```
 
 ### With docker compose example
@@ -19,5 +19,5 @@ make
 ```bash
 docker-compose up -d
 make
-./bin/golang-migration user 123 test
+./bin/grotto user 123 test
 ```

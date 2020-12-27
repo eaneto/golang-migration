@@ -3,8 +3,8 @@ package writer
 import (
 	"database/sql"
 
-	"github.com/eaneto/golang-migration/pkg/reader"
-	"github.com/eaneto/golang-migration/pkg/registry"
+	"github.com/eaneto/grotto/pkg/reader"
+	"github.com/eaneto/grotto/pkg/registry"
 	"github.com/sirupsen/logrus"
 )
 

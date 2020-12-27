@@ -2,19 +2,19 @@ version: '3.3'
 
 services:
   database:
-    container_name: todo_database
+    container_name: migration_database
     image: postgres:latest
     environment:
       POSTGRES_USER: user
       POSTGRES_PASSWORD: 123
-      POSTGRES_DB: todo
+      POSTGRES_DB: test
     ports:
       - 5432:5432
     networks:
       - postgres-network
 
   pgadmin:
-    container_name: todo_pgadmin
+    container_name: migration_pgadmin
     image: dpage/pgadmin4
     environment:
       PGADMIN_DEFAULT_EMAIL: "user@user.com"

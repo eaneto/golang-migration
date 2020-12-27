@@ -1,5 +1,8 @@
 # Grotto
 
+![The blue grotto in Capri](https://lh3.googleusercontent.com/proxy/8TkalBXjwe56lc-OKhMF69rEVhU1HGKPr_ZOvOztRQWO0xw3Ii57QgpbCo3o6yvRRpRqCEj_VYU_viAS_p4mcs7em3gEjZyZuAUGWbY84eFbjvIbkWoMk_fp8Fxx88UYyqMGqjwIDeLSL8fEDwOQRTQAkoQh46mO0Q)
+> Painting by [Jakob Alt](https://de.wikipedia.org/wiki/Jakob_Alt)
+
 Very basic tool to manage database migrations for PostgreSQL written in go.
 
 ## How it works

@@ -1,6 +1,6 @@
 # Grotto
 
-![The blue grotto in Capri](https://upload.wikimedia.org/wikipedia/commons/d/d4/Jakob_Alt_-_Die_Blaue_Grotte_auf_der_Insel_Capri_-_1835-36.jpeg)
+![The blue grotto in Capri](https://upload.wikimedia.org/wikipedia/commons/e/eb/Heinrich_Jakob_Fried_-_Die_Blaue_Grotte_auf_Capri.jpg)
 > Painting by [Jakob Alt](https://de.wikipedia.org/wiki/Jakob_Alt)
 
 Very basic tool to manage database migrations for PostgreSQL written in go.

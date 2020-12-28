@@ -3,7 +3,6 @@ package registry
 import (
 	"database/sql"
 	"fmt"
-	"io/ioutil"
 
 	"github.com/eaneto/grotto/pkg/reader"
 	"github.com/sirupsen/logrus"
@@ -15,11 +14,8 @@ type MigrationRegister struct {
 
 // CreateMigrationTable Executes the SQL script that creates the migration table.
 func (r MigrationRegister) CreateMigrationTable() error {
-	script, err := readDefaultMigrationTableScript()
-	if err != nil {
-		return err
-	}
-	_, err = r.Tx.Exec(string(script))
+	script := getDefaultMigrationTableScript()
+	_, err := r.Tx.Exec(string(script))
 	if err != nil {
 		logrus.Error("Error creating basic migration table.\n", err)
 		return err
@@ -27,20 +23,23 @@ func (r MigrationRegister) CreateMigrationTable() error {
 	return nil
 }
 
-// readDefaultMigrationTableScript Reads the basic script for the migration table.
-func readDefaultMigrationTableScript() ([]byte, error) {
-	scriptContent, err := ioutil.ReadFile("create_migration_table.sql")
-	if err != nil {
-		logrus.Error("Error reading base migration file.\n", err)
-		return nil, err
-	}
-	return scriptContent, nil
+// getDefaultMigrationTableScript Gets the basic script for the migration table.
+func getDefaultMigrationTableScript() string {
+	// This table is responsible to store the scripts executed so they won't be
+	// executed multiple times.
+	// The table stores a sequencial id, the name of the script which was executed
+	// and the date it was created. The script name is a unique field.
+	return `create table if not exists grotto_migration(
+id bigint generated always as identity primary key,
+script_name varchar constraint uk_script_name unique not null,
+created_at timestamp not null default now()
+);`
 }
 
 // IsScriptAlreadyExecuted Check if the script was alreayd executed by counting the rows
 // in the migration table with the script name.
 func (r MigrationRegister) IsScriptAlreadyExecuted(script reader.SQLScript) (bool, error) {
-	query := fmt.Sprintf("SELECT count(id) FROM golang_migration WHERE script_name = '%s'", script.Name)
+	query := fmt.Sprintf("SELECT count(id) FROM grotto_migration WHERE script_name = '%s'", script.Name)
 	var count int
 	err := r.Tx.QueryRow(query).Scan(&count)
 	if err != nil {
@@ -54,7 +53,7 @@ func (r MigrationRegister) IsScriptAlreadyExecuted(script reader.SQLScript) (boo
 
 // MarkScriptAsExecuted Insert the script name on the migration table.
 func (r MigrationRegister) MarkScriptAsExecuted(script reader.SQLScript) error {
-	query := fmt.Sprintf("INSERT INTO golang_migration (script_name) VALUES ('%s')", script.Name)
+	query := fmt.Sprintf("INSERT INTO grotto_migration (script_name) VALUES ('%s')", script.Name)
 	_, err := r.Tx.Exec(query)
 	if err != nil {
 		logrus.WithFields(logrus.Fields{

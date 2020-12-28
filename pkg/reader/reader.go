@@ -10,6 +10,11 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// MigrationReader Basic structure for the migration script reader.
+type MigrationReader struct {
+	MigrationDirectory string
+}
+
 // SQLScript Represents a SQL script with the filename and content.
 type SQLScript struct {
 	// The actual SQL script content.
@@ -26,12 +31,12 @@ func (by ByName) Swap(i, j int)      { by[i], by[j] = by[j], by[i] }
 
 // ReadScriptFiles Read all found SQL scripts and return a structure with
 // all its content.
-func ReadScriptFiles() []SQLScript {
-	files := getAllScriptFiles()
+func (r MigrationReader) ReadScriptFiles() []SQLScript {
+	files := getAllScriptFiles(r.MigrationDirectory)
 
 	scripts := make([]SQLScript, len(files))
 	for index, file := range files {
-		content, err := ioutil.ReadFile("migration/" + file.Name())
+		content, err := ioutil.ReadFile(r.MigrationDirectory + "/" + file.Name())
 		if err != nil {
 			logrus.WithFields(logrus.Fields{
 				"file_name": file.Name(),
@@ -47,8 +52,8 @@ func ReadScriptFiles() []SQLScript {
 }
 
 // getAllScriptFiles Get all the SQL scripts inside the migration directory.
-func getAllScriptFiles() []os.FileInfo {
-	files, err := ioutil.ReadDir("./migration")
+func getAllScriptFiles(migrationDirectory string) []os.FileInfo {
+	files, err := ioutil.ReadDir(migrationDirectory)
 	if err != nil {
 		logrus.Fatal("Error reading migration directory.\n", err)
 	}

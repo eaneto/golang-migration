@@ -19,21 +19,23 @@ func Run() {
 	user := os.Args[1]
 	password := os.Args[2]
 	database := os.Args[3]
+	migrationDirectory := os.Args[4]
 
 	db, err := sql.Open("pgx", fmt.Sprintf(DATABASE_URL, user, password, database))
 	if err != nil {
 		logrus.Fatal("Failure stablishing database connection.\n", err)
 	}
 	defer db.Close()
-	scripts := reader.ReadScriptFiles()
+	migrationReader := reader.MigrationReader{MigrationDirectory: migrationDirectory}
+	scripts := migrationReader.ReadScriptFiles()
 	tx, err := db.Begin()
 	if err != nil {
 		logrus.Fatal("Error starting transaction.\n", err)
 	}
 
-	writer := writer.Writer{
+	writer := writer.ScriptExecutor{
 		Tx: tx,
-		Registry: registry.Registry{
+		MigrationRegister: registry.MigrationRegister{
 			Tx: tx,
 		},
 	}
@@ -51,8 +53,8 @@ func Run() {
 }
 
 // createMigrationTable Creates the basic migration table.
-func createMigrationTable(writer writer.Writer) {
-	err := writer.Registry.CreateMigrationTable()
+func createMigrationTable(writer writer.ScriptExecutor) {
+	err := writer.MigrationRegister.CreateMigrationTable()
 	if err != nil {
 		logrus.Error("Rollbacking transacation.")
 		err = writer.Tx.Rollback()

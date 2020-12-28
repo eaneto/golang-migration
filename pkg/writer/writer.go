@@ -8,15 +8,16 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type Writer struct {
-	Tx       *sql.Tx
-	Registry registry.Registry
+// ScriptExecutor Basic structure to control script execution.
+type ScriptExecutor struct {
+	Tx                *sql.Tx
+	MigrationRegister registry.MigrationRegister
 }
 
-// processScripts Process all given scripts inside a single transaction.
-func (w Writer) ProcessScripts(scripts []reader.SQLScript) error {
+// ProcessScripts Process all given scripts inside a single transaction.
+func (executor ScriptExecutor) ProcessScripts(scripts []reader.SQLScript) error {
 	for _, script := range scripts {
-		err := w.processScript(script)
+		err := executor.processScript(script)
 		if err != nil {
 			return err
 		}
@@ -25,8 +26,8 @@ func (w Writer) ProcessScripts(scripts []reader.SQLScript) error {
 }
 
 // processScript Process a given script inside the given transaction.
-func (w Writer) processScript(script reader.SQLScript) error {
-	isAlreadyProcessed, err := w.Registry.IsScriptAlreadyExecuted(script)
+func (executor ScriptExecutor) processScript(script reader.SQLScript) error {
+	isAlreadyProcessed, err := executor.MigrationRegister.IsScriptAlreadyExecuted(script)
 	if err != nil {
 		return err
 	}
@@ -37,7 +38,7 @@ func (w Writer) processScript(script reader.SQLScript) error {
 			"script_name": script.Name,
 		}).Info("Script already executed.")
 	} else {
-		err = w.executeScriptAndMarkAsExecuted(script)
+		err = executor.executeScriptAndMarkAsExecuted(script)
 		if err != nil {
 			return err
 		}
@@ -46,12 +47,12 @@ func (w Writer) processScript(script reader.SQLScript) error {
 }
 
 // executeScriptAndMarkAsExecuted Executes the given script and mark it as executed.
-func (w Writer) executeScriptAndMarkAsExecuted(script reader.SQLScript) error {
-	err := executeScript(w.Tx, script)
+func (executor ScriptExecutor) executeScriptAndMarkAsExecuted(script reader.SQLScript) error {
+	err := executeScript(executor.Tx, script)
 	if err != nil {
 		return err
 	}
-	err = w.Registry.MarkScriptAsExecuted(script)
+	err = executor.MigrationRegister.MarkScriptAsExecuted(script)
 	if err != nil {
 		return err
 	}
@@ -72,8 +73,8 @@ func executeScript(tx *sql.Tx, script reader.SQLScript) error {
 }
 
 // RollbackTransaction Rollback the given transaction.
-func (w Writer) RollbackTransaction() {
-	err := w.Tx.Rollback()
+func (executor ScriptExecutor) RollbackTransaction() {
+	err := executor.Tx.Rollback()
 	if err != nil {
 		logrus.Fatal("Error rollbacking transaction.\n", err)
 	}
@@ -81,8 +82,8 @@ func (w Writer) RollbackTransaction() {
 }
 
 // CommitTransaction Commit to the given transaction.
-func (w Writer) CommitTransaction() {
-	err := w.Tx.Commit()
+func (executor ScriptExecutor) CommitTransaction() {
+	err := executor.Tx.Commit()
 	if err != nil {
 		logrus.Fatal("Error commiting transaction.\n", err)
 	}

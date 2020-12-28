@@ -9,7 +9,8 @@ Very basic tool to manage database migrations for PostgreSQL written in go.
 
 The program expects a migration directory on the root of the project with sql files.
 The files must have the .sql extension and will be ordered before being executed, for
-that reason it's a good idea to implement a naming strategy like V1_XX, V2_XX, V3_XX...
+that reason it's a good idea to implement a naming strategy like `V1_XX`, `V2_XX`,
+`V3_XX`.
 
 ## TODOs
 
@@ -20,7 +21,7 @@ that reason it's a good idea to implement a naming strategy like V1_XX, V2_XX, V
 
 ```bash
 make
-./bin/grotto <user> <password> <database_name>
+./bin/grotto <user> <password> <database_name> <migration_directory>
 ```
 
 ### With docker compose example
@@ -28,5 +29,5 @@ make
 ```bash
 docker-compose up -d
 make
-./bin/grotto user 123 test
+./bin/grotto user 123 test test_migration
 ```

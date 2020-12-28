@@ -9,12 +9,12 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type Registry struct {
+type MigrationRegister struct {
 	Tx *sql.Tx
 }
 
 // CreateMigrationTable Executes the SQL script that creates the migration table.
-func (r Registry) CreateMigrationTable() error {
+func (r MigrationRegister) CreateMigrationTable() error {
 	script, err := readDefaultMigrationTableScript()
 	if err != nil {
 		return err
@@ -39,7 +39,7 @@ func readDefaultMigrationTableScript() ([]byte, error) {
 
 // IsScriptAlreadyExecuted Check if the script was alreayd executed by counting the rows
 // in the migration table with the script name.
-func (r Registry) IsScriptAlreadyExecuted(script reader.SQLScript) (bool, error) {
+func (r MigrationRegister) IsScriptAlreadyExecuted(script reader.SQLScript) (bool, error) {
 	query := fmt.Sprintf("SELECT count(id) FROM golang_migration WHERE script_name = '%s'", script.Name)
 	var count int
 	err := r.Tx.QueryRow(query).Scan(&count)
@@ -53,7 +53,7 @@ func (r Registry) IsScriptAlreadyExecuted(script reader.SQLScript) (bool, error)
 }
 
 // MarkScriptAsExecuted Insert the script name on the migration table.
-func (r Registry) MarkScriptAsExecuted(script reader.SQLScript) error {
+func (r MigrationRegister) MarkScriptAsExecuted(script reader.SQLScript) error {
 	query := fmt.Sprintf("INSERT INTO golang_migration (script_name) VALUES ('%s')", script.Name)
 	_, err := r.Tx.Exec(query)
 	if err != nil {

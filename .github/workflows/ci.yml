@@ -13,6 +13,6 @@ jobs:
     - name: Checkout
       uses: actions/checkout@master
     - name: Tests
-      run: go test -v ./...
+      run: make test
     - name: Build
-      run: go build
+      run: make

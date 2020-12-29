@@ -35,7 +35,7 @@ func Run() {
 
 	writer := writer.ScriptExecutor{
 		Tx: tx,
-		MigrationRegister: registry.MigrationRegister{
+		MigrationRegister: registry.MigrationRegisterSQL{
 			Tx: tx,
 		},
 	}

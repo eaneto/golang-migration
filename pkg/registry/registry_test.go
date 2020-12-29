@@ -14,7 +14,7 @@ import (
 func TestCreatingDefaultMigrationTableWithNilTransactionShouldPanic(t *testing.T) {
 	// If the transaction is not initialized the register should not start a new transaction,
 	// it should just panic and exit the program.
-	registry := MigrationRegister{
+	registry := MigrationRegisterSQL{
 		Tx: nil,
 	}
 
@@ -29,7 +29,7 @@ func TestCreatingDefaultMigrationTableWithErrorExecutingScriptShouldReturnError(
 	mock.ExpectBegin()
 	tx, _ := db.Begin()
 
-	registry := MigrationRegister{
+	registry := MigrationRegisterSQL{
 		Tx: tx,
 	}
 	expectedError := errors.New("Error creating table")
@@ -48,7 +48,7 @@ func TestCreatingDefaultMigrationTableWithSuccessShouldReturnNilError(t *testing
 	mock.ExpectBegin()
 	tx, _ := db.Begin()
 
-	registry := MigrationRegister{
+	registry := MigrationRegisterSQL{
 		Tx: tx,
 	}
 	mock.ExpectExec(MIGRATION_TABLE_NAME).WillReturnResult(sqlmock.NewResult(0, 1))
@@ -65,7 +65,7 @@ func TestSearchForMigrationNotExecutedShouldReturnIsScriptNotExecuted(t *testing
 	mock.ExpectBegin()
 	tx, _ := db.Begin()
 
-	registry := MigrationRegister{
+	registry := MigrationRegisterSQL{
 		Tx: tx,
 	}
 	script := reader.SQLScript{
@@ -88,7 +88,7 @@ func TestSearchForMigrationExecutedShouldReturnIsScriptExecuted(t *testing.T) {
 	mock.ExpectBegin()
 	tx, _ := db.Begin()
 
-	registry := MigrationRegister{
+	registry := MigrationRegisterSQL{
 		Tx: tx,
 	}
 	script := reader.SQLScript{
@@ -111,7 +111,7 @@ func TestSearchForMigrationExecutedWithErrorOnQueryShouldReturnError(t *testing.
 	mock.ExpectBegin()
 	tx, _ := db.Begin()
 
-	registry := MigrationRegister{
+	registry := MigrationRegisterSQL{
 		Tx: tx,
 	}
 	script := reader.SQLScript{
@@ -136,7 +136,7 @@ func TestMarkScriptAsExecutedWithSuccessShouldNotReturnError(t *testing.T) {
 	mock.ExpectBegin()
 	tx, _ := db.Begin()
 
-	registry := MigrationRegister{tx}
+	registry := MigrationRegisterSQL{tx}
 	script := reader.SQLScript{
 		Name:    "script_name.sql",
 		Content: "Script content",
@@ -157,7 +157,7 @@ func TestMarkScriptAsExecutedWithErrorShouldReturnError(t *testing.T) {
 	mock.ExpectBegin()
 	tx, _ := db.Begin()
 
-	registry := MigrationRegister{tx}
+	registry := MigrationRegisterSQL{tx}
 	script := reader.SQLScript{
 		Name:    "script_name.sql",
 		Content: "Script content",

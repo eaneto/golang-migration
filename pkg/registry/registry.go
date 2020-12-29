@@ -22,13 +22,22 @@ const DEFAULT_MIGRATION_SCRIPT = `create table if not exists ` +
 script_name varchar constraint uk_script_name unique not null,
 created_at timestamp not null default now());`
 
-type MigrationRegister struct {
+// MigrationRegister Base interface for the migration registration.
+type MigrationRegister interface {
+	CreateMigrationTable() error
+	IsScriptAlreadyExecuted(script reader.SQLScript) (bool, error)
+	MarkScriptAsExecuted(script reader.SQLScript) error
+}
+
+// MigrationRegisterSQL Migration register for SQL.
+type MigrationRegisterSQL struct {
+	// Transaction that the migration should be registered.
 	Tx *sql.Tx
 }
 
 // CreateMigrationTable Executes the SQL script that creates the migration table.
-func (r MigrationRegister) CreateMigrationTable() error {
-	_, err := r.Tx.Exec(DEFAULT_MIGRATION_SCRIPT)
+func (m MigrationRegisterSQL) CreateMigrationTable() error {
+	_, err := m.Tx.Exec(DEFAULT_MIGRATION_SCRIPT)
 	if err != nil {
 		logrus.Error("Error creating basic migration table.\n", err)
 		return err
@@ -38,11 +47,11 @@ func (r MigrationRegister) CreateMigrationTable() error {
 
 // IsScriptAlreadyExecuted Check if the script was alreayd executed by counting the rows
 // in the migration table with the script name.
-func (r MigrationRegister) IsScriptAlreadyExecuted(script reader.SQLScript) (bool, error) {
+func (m MigrationRegisterSQL) IsScriptAlreadyExecuted(script reader.SQLScript) (bool, error) {
 	query := fmt.Sprintf("SELECT count(id) FROM %s WHERE script_name = '%s'",
 		MIGRATION_TABLE_NAME, script.Name)
 	var count int
-	err := r.Tx.QueryRow(query).Scan(&count)
+	err := m.Tx.QueryRow(query).Scan(&count)
 	if err != nil {
 		logrus.WithFields(logrus.Fields{
 			"script_name": script.Name,
@@ -53,10 +62,10 @@ func (r MigrationRegister) IsScriptAlreadyExecuted(script reader.SQLScript) (boo
 }
 
 // MarkScriptAsExecuted Insert the script name on the migration table.
-func (r MigrationRegister) MarkScriptAsExecuted(script reader.SQLScript) error {
+func (m MigrationRegisterSQL) MarkScriptAsExecuted(script reader.SQLScript) error {
 	query := fmt.Sprintf("INSERT INTO %s (script_name) VALUES ('%s')",
 		MIGRATION_TABLE_NAME, script.Name)
-	_, err := r.Tx.Exec(query)
+	_, err := m.Tx.Exec(query)
 	if err != nil {
 		logrus.WithFields(logrus.Fields{
 			"script_name": script.Name,

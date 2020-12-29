@@ -13,18 +13,23 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-const DATABASE_URL = "postgres://%s:%s@%s:5432/%s"
+// DATABASE_URL Basic postgres connection string.  All options are
+// replaced with command line arguments.
+const DATABASE_URL = "postgres://%s:%s@%s:%s/%s"
 
 func Run() {
-	user := flag.String("user", "", "The user's name")
-	password := flag.String("password", "", "The user's password")
-	database := flag.String("database", "", "The database name")
+	user := flag.String("user", "", "Database user's name")
+	password := flag.String("password", "", "Database user's password")
+	database := flag.String("database", "", "Name of the database")
 	address := flag.String("addresss", "localhost", "Database server address")
+	port := flag.String("port", "5432", "Database server port")
 	migrationDirectory := flag.String("dir", "", "The migration directory containing the scripts to be executed")
 
 	flag.Parse()
 
-	db, err := sql.Open("pgx", fmt.Sprintf(DATABASE_URL, *user, *password, *address, *database))
+	db, err := sql.Open("pgx", fmt.Sprintf(DATABASE_URL, *user, *password, *address,
+		*port, *database))
+
 	if err != nil {
 		logrus.Fatal("Failure stablishing database connection.\n", err)
 	}

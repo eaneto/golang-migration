@@ -2,8 +2,8 @@ package grotto
 
 import (
 	"database/sql"
+	"flag"
 	"fmt"
-	"os"
 
 	"github.com/eaneto/grotto/pkg/executor"
 	"github.com/eaneto/grotto/pkg/reader"
@@ -16,17 +16,19 @@ import (
 const DATABASE_URL = "postgres://%s:%s@localhost:5432/%s"
 
 func Run() {
-	user := os.Args[1]
-	password := os.Args[2]
-	database := os.Args[3]
-	migrationDirectory := os.Args[4]
+	user := flag.String("user", "", "The user's name")
+	password := flag.String("password", "", "The user's password")
+	database := flag.String("database", "", "The database name")
+	migrationDirectory := flag.String("dir", "", "The migration directory containing the scripts to be executed")
 
-	db, err := sql.Open("pgx", fmt.Sprintf(DATABASE_URL, user, password, database))
+	flag.Parse()
+
+	db, err := sql.Open("pgx", fmt.Sprintf(DATABASE_URL, *user, *password, *database))
 	if err != nil {
 		logrus.Fatal("Failure stablishing database connection.\n", err)
 	}
 	defer db.Close()
-	migrationReader := reader.MigrationReader{MigrationDirectory: migrationDirectory}
+	migrationReader := reader.MigrationReader{MigrationDirectory: *migrationDirectory}
 	scripts := migrationReader.ReadScriptFiles()
 	tx, err := db.Begin()
 	if err != nil {

@@ -14,14 +14,14 @@ that reason it's a good idea to implement a naming strategy like `V1_XX`, `V2_XX
 
 ## TODOs
 
-- Unit tests
 - Integration tests (with dockerized database)
 
 ## Usage
 
 ```bash
 make
-./bin/grotto <user> <password> <database_name> <migration_directory>
+./bin/grotto -help
+./bin/grotto -user <user> -password <password> -database <database_name> -dir <migration_directory>
 ```
 
 ### With docker compose example
@@ -29,5 +29,5 @@ make
 ```bash
 docker-compose up -d
 make
-./bin/grotto user 123 test test_migration
+./bin/grotto -user user -password 123 -database test -dir test_migration
 ```

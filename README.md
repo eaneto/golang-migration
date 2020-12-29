@@ -12,9 +12,6 @@ The files must have the .sql extension and will be ordered before being executed
 that reason it's a good idea to implement a naming strategy like `V1_XX`, `V2_XX`,
 `V3_XX`.
 
-## TODOs
-
-- Integration tests (with dockerized database)
 
 ## Usage
 
@@ -30,4 +27,11 @@ make
 docker-compose up -d
 make
 ./bin/grotto -user user -password 123 -database test -dir test_migration
+```
+
+
+## Basic integration tests with docker compose
+
+```bash
+./test/integration_tests.sql
 ```

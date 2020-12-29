@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/eaneto/grotto/pkg/executor"
 	"github.com/eaneto/grotto/pkg/reader"
 	"github.com/eaneto/grotto/pkg/registry"
-	"github.com/eaneto/grotto/pkg/writer"
 
 	_ "github.com/jackc/pgx/v4/stdlib"
 	"github.com/sirupsen/logrus"
@@ -33,31 +33,31 @@ func Run() {
 		logrus.Fatal("Error starting transaction.\n", err)
 	}
 
-	writer := writer.ScriptExecutor{
+	executor := executor.ScriptExecutor{
 		Tx: tx,
 		MigrationRegister: registry.MigrationRegisterSQL{
 			Tx: tx,
 		},
 	}
-	createMigrationTable(writer)
+	createMigrationTable(executor)
 
 	// Process all read scripts
-	err = writer.ProcessScripts(scripts)
+	err = executor.ProcessScripts(scripts)
 
 	// Only commits if all operations were succesful.
 	if err != nil {
-		writer.RollbackTransaction()
+		executor.RollbackTransaction()
 	} else {
-		writer.CommitTransaction()
+		executor.CommitTransaction()
 	}
 }
 
 // createMigrationTable Creates the basic migration table.
-func createMigrationTable(writer writer.ScriptExecutor) {
-	err := writer.MigrationRegister.CreateMigrationTable()
+func createMigrationTable(scriptExecutor executor.ScriptExecutor) {
+	err := scriptExecutor.MigrationRegister.CreateMigrationTable()
 	if err != nil {
 		logrus.Error("Rollbacking transacation.")
-		err = writer.Tx.Rollback()
+		err = scriptExecutor.Tx.Rollback()
 		if err != nil {
 			logrus.Fatal("Error rollbacking transaction.\n", err)
 		}

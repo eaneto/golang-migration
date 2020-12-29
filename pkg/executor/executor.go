@@ -1,4 +1,4 @@
-package writer
+package executor
 
 import (
 	"database/sql"

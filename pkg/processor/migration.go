@@ -4,10 +4,10 @@ import (
 	"database/sql"
 	"fmt"
 
-	"github.com/eaneto/grotto/internal/connection"
-	"github.com/eaneto/grotto/pkg/executor"
-	"github.com/eaneto/grotto/pkg/reader"
-	"github.com/eaneto/grotto/pkg/registry"
+	"github.com/eaneto/grotto/internal/executor"
+	"github.com/eaneto/grotto/internal/reader"
+	"github.com/eaneto/grotto/internal/registry"
+	"github.com/eaneto/grotto/pkg/connection"
 	"github.com/sirupsen/logrus"
 )
 

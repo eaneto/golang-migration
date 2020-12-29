@@ -3,8 +3,8 @@ package executor
 import (
 	"database/sql"
 
-	"github.com/eaneto/grotto/pkg/reader"
-	"github.com/eaneto/grotto/pkg/registry"
+	"github.com/eaneto/grotto/internal/reader"
+	"github.com/eaneto/grotto/internal/registry"
 	"github.com/sirupsen/logrus"
 )
 

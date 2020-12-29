@@ -3,8 +3,8 @@ package grotto
 import (
 	"flag"
 
-	"github.com/eaneto/grotto/internal/connection"
-	"github.com/eaneto/grotto/internal/processor"
+	"github.com/eaneto/grotto/pkg/connection"
+	"github.com/eaneto/grotto/pkg/processor"
 
 	_ "github.com/jackc/pgx/v4/stdlib"
 )

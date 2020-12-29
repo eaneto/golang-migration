@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/eaneto/grotto/pkg/reader"
+	"github.com/eaneto/grotto/internal/reader"
 	"github.com/stretchr/testify/assert"
 )
 

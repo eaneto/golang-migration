@@ -7,6 +7,7 @@ import (
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/eaneto/grotto/pkg/database"
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -366,11 +367,13 @@ func TestRollbackWithSuccessShouldRollbackAndDoNothing(t *testing.T) {
 	assertDatabaseExpectations(t, dbMock)
 }
 
-func TestCommitWithErrorShouldPanic(t *testing.T) {
+func TestCommitWithErrorShouldLogFatal(t *testing.T) {
 	db, dbMock, _ := sqlmock.New()
 	defer db.Close()
-	dbMock.ExpectBegin().WillReturnError(errors.New("Error"))
+	dbMock.ExpectBegin()
 	tx, _ := db.Begin()
+	dbMock.ExpectCommit().
+		WillReturnError(errors.New("Error"))
 
 	migrationRegister := new(MigrationRegisterMock)
 
@@ -379,16 +382,24 @@ func TestCommitWithErrorShouldPanic(t *testing.T) {
 		MigrationRegister: migrationRegister,
 	}
 
-	assert.Panics(t, scriptExecutor.CommitTransaction)
+	defer func() { logrus.StandardLogger().ExitFunc = nil }()
+	var fatal bool
+	logrus.StandardLogger().ExitFunc = func(int) { fatal = true }
 
+	scriptExecutor.CommitTransaction()
+
+	assert.True(t, fatal)
 	assertDatabaseExpectations(t, dbMock)
 }
 
-func TestRollbackWithErrorShouldPanic(t *testing.T) {
+func TestRollbackWithErrorShouldLogFatal(t *testing.T) {
 	db, dbMock, _ := sqlmock.New()
 	defer db.Close()
-	dbMock.ExpectBegin().WillReturnError(errors.New("Error"))
+	dbMock.ExpectBegin()
 	tx, _ := db.Begin()
+	dbMock.ExpectRollback().
+		WillReturnError(errors.New("Error"))
+
 	migrationRegister := new(MigrationRegisterMock)
 
 	scriptExecutor := ScriptExecutorSQL{
@@ -396,8 +407,13 @@ func TestRollbackWithErrorShouldPanic(t *testing.T) {
 		MigrationRegister: migrationRegister,
 	}
 
-	assert.Panics(t, scriptExecutor.RollbackTransaction)
+	defer func() { logrus.StandardLogger().ExitFunc = nil }()
+	var fatal bool
+	logrus.StandardLogger().ExitFunc = func(int) { fatal = true }
 
+	scriptExecutor.RollbackTransaction()
+
+	assert.True(t, fatal)
 	assertDatabaseExpectations(t, dbMock)
 }
 

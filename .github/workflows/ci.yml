@@ -19,7 +19,7 @@ jobs:
     - name: Generate coverage
       run: make codecov
     - name: Codecov
-      uses: codecov/codecov-acion@v1
+      uses: codecov/codecov-action@v1
       with:
         file: ./coverage.txt
         verbose: true

@@ -5,25 +5,34 @@
 ![The blue grotto in Capri](https://upload.wikimedia.org/wikipedia/commons/e/eb/Heinrich_Jakob_Fried_-_Die_Blaue_Grotte_auf_Capri.jpg)
 > Painting by [Jakob Alt](https://de.wikipedia.org/wiki/Jakob_Alt)
 
-Very basic tool to manage database migrations for PostgreSQL written in go.
+Basic tool to manage database migrations for PostgreSQL.
 
 ## How it works
 
-The program expects a migration directory on the root of the project with sql files.
-The files must have the .sql extension and will be ordered before being executed, for
-that reason it's a good idea to implement a naming strategy like `V1_XX`, `V2_XX`,
-`V3_XX`.
-
+The program will read all sql files for a given directory and execute
+all of them in order. When reading the migration directory, *Grotto*
+will order every file by their names, if all the scripts use some kind
+of name versioning like,`V1_XX.sql`, `V2_XX.sql`, there won't be any
+problems with the execution order, but if they don't match any of
+these rules and just have plain text names, like, `create_table_x.sql`
+or `create_index_y.sql`, you may run into some trouble if your scripts
+must be executed in a different order.
 
 ## Usage
 
+### Build
+
 ```bash
 make
-./bin/grotto -help
-./bin/grotto -user <user> -password <password> -database <database_name> -dir <migration_directory>
 ```
 
-### With docker compose example
+### Help
+
+```bash
+./bin/grotto -help
+```
+
+### Run example scripts with docker compose
 
 ```bash
 docker-compose up -d
@@ -31,9 +40,16 @@ make
 ./bin/grotto -user user -password 123 -database test -dir test/valid_migration
 ```
 
-
 ## Basic integration tests with docker compose
 
+There is a very simple shell script that runs docker compose, compiles
+and runs the grotto test for some scripts under de `test` directory.
+
 ```bash
-./test/integration_tests.sql
+./test/integration_tests.sh
 ```
+
+## TODOs
+
+- Enhance integration tests with psql validations, like validating a
+  table was created, or some data was inserted only once.

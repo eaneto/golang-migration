@@ -2,9 +2,17 @@
 
 alias grotto=./bin/grotto
 
+start_containers() {
+    docker-compose up -d
+}
+
+stop_containers() {
+    docker-compose down
+}
+
 # Stop and start PostgreSQL container
-docker-compose down
-docker-compose up -d
+stop_containers
+start_containers
 
 # Give some time for the containers to go up
 sleep 2.5
@@ -35,4 +43,4 @@ else
 fi
 
 # Stop containers
-docker-compose down
+stop_containers

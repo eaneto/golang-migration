@@ -49,6 +49,35 @@ func TestProcessScriptWithNilTransactionShouldPanic(t *testing.T) {
 	migrationRegister.AssertExpectations(t)
 }
 
+func TestCreateMigrationTableWithSuccessShouldReturnSameResult(t *testing.T) {
+	migrationRegister := new(MigrationRegisterMock)
+	scriptExecutor := ScriptExecutorSQL{
+		Tx:                nil,
+		MigrationRegister: migrationRegister,
+	}
+	migrationRegister.On("CreateMigrationTable").Return(nil)
+
+	error := scriptExecutor.CreateMigrationTable()
+
+	assert.Nil(t, error)
+	migrationRegister.AssertExpectations(t)
+}
+
+func TestCreateMigrationTableWithErrorShouldReturnSameResult(t *testing.T) {
+	migrationRegister := new(MigrationRegisterMock)
+	scriptExecutor := ScriptExecutorSQL{
+		Tx:                nil,
+		MigrationRegister: migrationRegister,
+	}
+	expectedError := errors.New("Error creating migration table")
+	migrationRegister.On("CreateMigrationTable").Return(expectedError)
+
+	actualError := scriptExecutor.CreateMigrationTable()
+
+	assert.Equal(t, expectedError, actualError)
+	migrationRegister.AssertExpectations(t)
+}
+
 func TestProcessScriptWithEmptyListShouldNotReturnErrorAndDoNothing(t *testing.T) {
 	db, mock, _ := sqlmock.New()
 	defer db.Close()
@@ -160,6 +189,39 @@ func TestProcessOneUnexecutedScriptAndErrorMarkingAsExecutedShouldReturnError(t 
 	assertDatabaseExpectations(t, dbMock)
 }
 
+func TestProcessOneUnexecutedScriptWithExecutingShouldReturnError(t *testing.T) {
+	db, dbMock, _ := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherRegexp))
+	defer db.Close()
+	dbMock.ExpectBegin()
+	tx, _ := db.Begin()
+
+	migrationRegister := new(MigrationRegisterMock)
+	migrationRegister.On("IsScriptAlreadyExecuted", mock.Anything).Return(false, nil)
+
+	scriptExecutor := ScriptExecutorSQL{
+		Tx:                tx,
+		MigrationRegister: migrationRegister,
+	}
+
+	scripts := []database.SQLScript{
+		{
+			Name:    "script_name.sql",
+			Content: "INSERT INTO USERS VALUES ('id')",
+		},
+	}
+	expectedError := errors.New("Error processing script.")
+	dbMock.ExpectExec(regexp.QuoteMeta(scripts[0].Content)).
+		WillReturnError(expectedError)
+
+	actualError := scriptExecutor.ProcessScripts(scripts)
+
+	assert.NotNil(t, actualError)
+	assert.Equal(t, expectedError, actualError)
+	migrationRegister.AssertNotCalled(t, "MarkScriptAsExecuted", mock.Anything)
+	migrationRegister.AssertExpectations(t)
+	assertDatabaseExpectations(t, dbMock)
+}
+
 func TestProcessOneUnexecutedScriptShouldExecuteScriptContentAndNotReturnError(t *testing.T) {
 	db, dbMock, _ := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherRegexp))
 	defer db.Close()
@@ -261,6 +323,46 @@ func TestProcessOneExecutedAndOneUnexecutedScriptShouldExecuteOneScriptContentAn
 
 	assert.Nil(t, error)
 	migrationRegister.AssertExpectations(t)
+	assertDatabaseExpectations(t, dbMock)
+}
+
+func TestCommitWithSuccessShouldCommitAndDoNothing(t *testing.T) {
+	db, dbMock, _ := sqlmock.New()
+	defer db.Close()
+	dbMock.ExpectBegin()
+	tx, _ := db.Begin()
+
+	migrationRegister := new(MigrationRegisterMock)
+
+	scriptExecutor := ScriptExecutorSQL{
+		Tx:                tx,
+		MigrationRegister: migrationRegister,
+	}
+
+	dbMock.ExpectCommit()
+
+	scriptExecutor.CommitTransaction()
+
+	assertDatabaseExpectations(t, dbMock)
+}
+
+func TestRollbackWithSuccessShouldRollbackAndDoNothing(t *testing.T) {
+	db, dbMock, _ := sqlmock.New()
+	defer db.Close()
+	dbMock.ExpectBegin()
+	tx, _ := db.Begin()
+
+	migrationRegister := new(MigrationRegisterMock)
+
+	scriptExecutor := ScriptExecutorSQL{
+		Tx:                tx,
+		MigrationRegister: migrationRegister,
+	}
+
+	dbMock.ExpectRollback()
+
+	scriptExecutor.RollbackTransaction()
+
 	assertDatabaseExpectations(t, dbMock)
 }
 

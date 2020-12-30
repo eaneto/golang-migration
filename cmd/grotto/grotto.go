@@ -29,6 +29,6 @@ func Run() {
 		Database: *database,
 		Address:  *address,
 		Port:     *port,
-	})
-	migrationProcessor.ProcessMigration(*migrationDirectory)
+	}, *migrationDirectory)
+	migrationProcessor.ProcessMigration()
 }

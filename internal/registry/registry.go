@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 
-	"github.com/eaneto/grotto/internal/reader"
+	"github.com/eaneto/grotto/pkg/database"
 	"github.com/sirupsen/logrus"
 )
 
@@ -25,8 +25,8 @@ created_at timestamp not null default now());`
 // MigrationRegister Base interface for the migration registration.
 type MigrationRegister interface {
 	CreateMigrationTable() error
-	IsScriptAlreadyExecuted(script reader.SQLScript) (bool, error)
-	MarkScriptAsExecuted(script reader.SQLScript) error
+	IsScriptAlreadyExecuted(script database.SQLScript) (bool, error)
+	MarkScriptAsExecuted(script database.SQLScript) error
 }
 
 // MigrationRegisterSQL Migration register for SQL.
@@ -47,7 +47,7 @@ func (m MigrationRegisterSQL) CreateMigrationTable() error {
 
 // IsScriptAlreadyExecuted Check if the script was alreayd executed by counting the rows
 // in the migration table with the script name.
-func (m MigrationRegisterSQL) IsScriptAlreadyExecuted(script reader.SQLScript) (bool, error) {
+func (m MigrationRegisterSQL) IsScriptAlreadyExecuted(script database.SQLScript) (bool, error) {
 	query := fmt.Sprintf("SELECT count(id) FROM %s WHERE script_name = '%s'",
 		MIGRATION_TABLE_NAME, script.Name)
 	var count int
@@ -62,7 +62,7 @@ func (m MigrationRegisterSQL) IsScriptAlreadyExecuted(script reader.SQLScript) (
 }
 
 // MarkScriptAsExecuted Insert the script name on the migration table.
-func (m MigrationRegisterSQL) MarkScriptAsExecuted(script reader.SQLScript) error {
+func (m MigrationRegisterSQL) MarkScriptAsExecuted(script database.SQLScript) error {
 	query := fmt.Sprintf("INSERT INTO %s (script_name) VALUES ('%s')",
 		MIGRATION_TABLE_NAME, script.Name)
 	_, err := m.Tx.Exec(query)

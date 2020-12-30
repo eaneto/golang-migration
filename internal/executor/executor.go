@@ -3,19 +3,32 @@ package executor
 import (
 	"database/sql"
 
-	"github.com/eaneto/grotto/internal/reader"
 	"github.com/eaneto/grotto/internal/registry"
+	"github.com/eaneto/grotto/pkg/database"
 	"github.com/sirupsen/logrus"
 )
 
-// ScriptExecutor Basic structure to control script execution.
-type ScriptExecutor struct {
+// ScriptExecutor Basic interface for the script executor.
+type ScriptExecutor interface {
+	CreateMigrationTable() error
+	ProcessScripts(scripts []database.SQLScript) error
+	RollbackTransaction()
+	CommitTransaction()
+}
+
+// ScriptExecutorSQL Basic structure to control script execution.
+type ScriptExecutorSQL struct {
 	Tx                *sql.Tx
 	MigrationRegister registry.MigrationRegister
 }
 
+// CreateMigrationTable Creates the migration table with the migration register.
+func (executor ScriptExecutorSQL) CreateMigrationTable() error {
+	return executor.MigrationRegister.CreateMigrationTable()
+}
+
 // ProcessScripts Process all given scripts inside a single transaction.
-func (executor ScriptExecutor) ProcessScripts(scripts []reader.SQLScript) error {
+func (executor ScriptExecutorSQL) ProcessScripts(scripts []database.SQLScript) error {
 	for _, script := range scripts {
 		err := executor.processScript(script)
 		if err != nil {
@@ -26,7 +39,7 @@ func (executor ScriptExecutor) ProcessScripts(scripts []reader.SQLScript) error 
 }
 
 // processScript Process a given script inside the given transaction.
-func (executor ScriptExecutor) processScript(script reader.SQLScript) error {
+func (executor ScriptExecutorSQL) processScript(script database.SQLScript) error {
 	isAlreadyProcessed, err := executor.MigrationRegister.IsScriptAlreadyExecuted(script)
 	if err != nil {
 		return err
@@ -47,7 +60,7 @@ func (executor ScriptExecutor) processScript(script reader.SQLScript) error {
 }
 
 // executeScriptAndMarkAsExecuted Executes the given script and mark it as executed.
-func (executor ScriptExecutor) executeScriptAndMarkAsExecuted(script reader.SQLScript) error {
+func (executor ScriptExecutorSQL) executeScriptAndMarkAsExecuted(script database.SQLScript) error {
 	err := executeScript(executor.Tx, script)
 	if err != nil {
 		return err
@@ -60,7 +73,7 @@ func (executor ScriptExecutor) executeScriptAndMarkAsExecuted(script reader.SQLS
 }
 
 // executeScript Executes a given SQL script.
-func executeScript(tx *sql.Tx, script reader.SQLScript) error {
+func executeScript(tx *sql.Tx, script database.SQLScript) error {
 	logrus.Info("Executing script: ", script.Name)
 	_, err := tx.Exec(script.Content)
 	if err != nil {
@@ -73,7 +86,7 @@ func executeScript(tx *sql.Tx, script reader.SQLScript) error {
 }
 
 // RollbackTransaction Rollback the given transaction.
-func (executor ScriptExecutor) RollbackTransaction() {
+func (executor ScriptExecutorSQL) RollbackTransaction() {
 	err := executor.Tx.Rollback()
 	if err != nil {
 		logrus.Fatal("Error rollbacking transaction.\n", err)
@@ -82,7 +95,7 @@ func (executor ScriptExecutor) RollbackTransaction() {
 }
 
 // CommitTransaction Commit to the given transaction.
-func (executor ScriptExecutor) CommitTransaction() {
+func (executor ScriptExecutorSQL) CommitTransaction() {
 	err := executor.Tx.Commit()
 	if err != nil {
 		logrus.Fatal("Error commiting transaction.\n", err)

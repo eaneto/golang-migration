@@ -13,13 +13,13 @@ import (
 
 // MigrationProcessor Interface for the migration processor
 type MigrationProcessor interface {
-	ProcessMigration(migrationDirectory string)
+	ProcessMigration()
 }
 
 // MigrationProcessorSQL Migration processor for SQL database.
 type MigrationProcessorSQL struct {
-	DatabaseInformation connection.DatabaseInformation
-	DB                  *sql.DB
+	Executor executor.ScriptExecutor
+	Reader   reader.MigrationReader
 }
 
 // DATABASE_URL Basic postgres connection string.  All options are
@@ -27,10 +27,31 @@ type MigrationProcessorSQL struct {
 const DATABASE_URL = "postgres://%s:%s@%s:%s/%s"
 
 // CreateProcessor Creates a migration processor with the given database information.
-func CreateProcessor(databaseInformation connection.DatabaseInformation) MigrationProcessorSQL {
+func CreateProcessor(databaseInformation connection.DatabaseInformation, migrationDirecetory string) MigrationProcessorSQL {
 	return MigrationProcessorSQL{
-		DatabaseInformation: databaseInformation,
-		DB:                  stablishConnection(databaseInformation),
+		Executor: initializeExecutor(stablishConnection(databaseInformation)),
+		Reader: reader.MigrationReaderFS{
+			MigrationDirectory: migrationDirecetory,
+		},
+	}
+}
+
+// ProcessMigration Process all migration located on the given directory.
+func (m MigrationProcessorSQL) ProcessMigration() {
+	// Creates migration table
+	createMigrationTable(m.Executor)
+
+	// Read all scripts on the migration directory
+	scripts := m.Reader.ReadScriptFiles()
+
+	// Process all read scripts
+	err := m.Executor.ProcessScripts(scripts)
+
+	// Only commits if all operations were succesful.
+	if err != nil {
+		m.Executor.RollbackTransaction()
+	} else {
+		m.Executor.CommitTransaction()
 	}
 }
 
@@ -44,33 +65,14 @@ func stablishConnection(databaseInformation connection.DatabaseInformation) *sql
 	return db
 }
 
-// ProcessMigration Process all migration located on the given directory.
-func (m MigrationProcessorSQL) ProcessMigration(migrationDirectory string) {
-	migrationReader := reader.MigrationReader{MigrationDirectory: migrationDirectory}
-	scripts := migrationReader.ReadScriptFiles()
-
-	executor := initializeExecutor(m.DB)
-	createMigrationTable(executor)
-
-	// Process all read scripts
-	err := executor.ProcessScripts(scripts)
-
-	// Only commits if all operations were succesful.
-	if err != nil {
-		executor.RollbackTransaction()
-	} else {
-		executor.CommitTransaction()
-	}
-}
-
 // initializeExecutor Initialize the script executor with the database connection.
-func initializeExecutor(db *sql.DB) executor.ScriptExecutor {
+func initializeExecutor(db *sql.DB) executor.ScriptExecutorSQL {
 	tx, err := db.Begin()
 	if err != nil {
 		logrus.Fatal("Error starting transaction.\n", err)
 	}
 
-	return executor.ScriptExecutor{
+	return executor.ScriptExecutorSQL{
 		Tx: tx,
 		MigrationRegister: registry.MigrationRegisterSQL{
 			Tx: tx,
@@ -80,13 +82,9 @@ func initializeExecutor(db *sql.DB) executor.ScriptExecutor {
 
 // createMigrationTable Creates the basic migration table.
 func createMigrationTable(scriptExecutor executor.ScriptExecutor) {
-	err := scriptExecutor.MigrationRegister.CreateMigrationTable()
+	err := scriptExecutor.CreateMigrationTable()
 	if err != nil {
 		logrus.Error("Rollbacking transacation.")
-		err = scriptExecutor.Tx.Rollback()
-		if err != nil {
-			logrus.Fatal("Error rollbacking transaction.\n", err)
-		}
-		panic(-1)
+		scriptExecutor.RollbackTransaction()
 	}
 }

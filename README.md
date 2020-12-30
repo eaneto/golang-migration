@@ -18,6 +18,9 @@ these rules and just have plain text names, like, `create_table_x.sql`
 or `create_index_y.sql`, you may run into some trouble if your scripts
 must be executed in a different order.
 
+All scripts are executed inside a single transaction, so either all of
+the scripts will be executed or none.
+
 ## Usage
 
 ### Build

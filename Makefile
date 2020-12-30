@@ -5,3 +5,6 @@ all:
 
 test:
 	go test -v ./...
+
+codecov:
+	go test ./... -race -coverprofile=coverage.txt -covermode=atomic

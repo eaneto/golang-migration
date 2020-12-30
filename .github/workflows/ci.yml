@@ -16,3 +16,10 @@ jobs:
       run: make test
     - name: Build
       run: make
+    - name: Generate coverage
+      run: make codecov
+    - name: Codecov
+      uses: codecov/codecov-acion@v1
+      with:
+        file: ./coverage.txt
+        verbose: true

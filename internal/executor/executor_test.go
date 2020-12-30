@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/eaneto/grotto/internal/reader"
+	"github.com/eaneto/grotto/pkg/database"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -20,24 +20,24 @@ func (m *MigrationRegisterMock) CreateMigrationTable() error {
 	return args.Error(0)
 }
 
-func (m *MigrationRegisterMock) IsScriptAlreadyExecuted(script reader.SQLScript) (bool, error) {
+func (m *MigrationRegisterMock) IsScriptAlreadyExecuted(script database.SQLScript) (bool, error) {
 	args := m.Called(script)
 	return args.Bool(0), args.Error(1)
 }
 
-func (m *MigrationRegisterMock) MarkScriptAsExecuted(script reader.SQLScript) error {
+func (m *MigrationRegisterMock) MarkScriptAsExecuted(script database.SQLScript) error {
 	args := m.Called()
 	return args.Error(0)
 }
 
 func TestProcessScriptWithNilTransactionShouldPanic(t *testing.T) {
 	migrationRegister := new(MigrationRegisterMock)
-	scriptExecutor := ScriptExecutor{
+	scriptExecutor := ScriptExecutorSQL{
 		Tx:                nil,
 		MigrationRegister: migrationRegister,
 	}
 
-	scripts := []reader.SQLScript{
+	scripts := []database.SQLScript{
 		{
 			Name:    "script_name.sql",
 			Content: "INSERT INTO USERS VALUES ('id')",
@@ -56,12 +56,12 @@ func TestProcessScriptWithEmptyListShouldNotReturnErrorAndDoNothing(t *testing.T
 	tx, _ := db.Begin()
 
 	migrationRegister := new(MigrationRegisterMock)
-	scriptExecutor := ScriptExecutor{
+	scriptExecutor := ScriptExecutorSQL{
 		Tx:                tx,
 		MigrationRegister: migrationRegister,
 	}
 
-	scripts := []reader.SQLScript{}
+	scripts := []database.SQLScript{}
 
 	error := scriptExecutor.ProcessScripts(scripts)
 
@@ -81,12 +81,12 @@ func TestProcessOneScriptWithErrorCheckingIfTheScriptWasExecutedShouldReturnErro
 	migrationRegister.On("IsScriptAlreadyExecuted", mock.Anything).
 		Return(false, expectedError)
 
-	scriptExecutor := ScriptExecutor{
+	scriptExecutor := ScriptExecutorSQL{
 		Tx:                tx,
 		MigrationRegister: migrationRegister,
 	}
 
-	scripts := []reader.SQLScript{
+	scripts := []database.SQLScript{
 		{
 			Name:    "script_name.sql",
 			Content: "INSERT INTO USERS VALUES ('id')",
@@ -109,12 +109,12 @@ func TestProcessOneScriptWithAlreadyProcessedScriptShouldNotReturnError(t *testi
 	migrationRegister := new(MigrationRegisterMock)
 	migrationRegister.On("IsScriptAlreadyExecuted", mock.Anything).Return(true, nil)
 
-	scriptExecutor := ScriptExecutor{
+	scriptExecutor := ScriptExecutorSQL{
 		Tx:                tx,
 		MigrationRegister: migrationRegister,
 	}
 
-	scripts := []reader.SQLScript{
+	scripts := []database.SQLScript{
 		{
 			Name:    "script_name.sql",
 			Content: "INSERT INTO USERS VALUES ('id')",
@@ -138,12 +138,12 @@ func TestProcessOneUnexecutedScriptAndErrorMarkingAsExecutedShouldReturnError(t 
 	expectedError := errors.New("Error marking as executed")
 	migrationRegister.On("MarkScriptAsExecuted", mock.Anything).Return(expectedError)
 
-	scriptExecutor := ScriptExecutor{
+	scriptExecutor := ScriptExecutorSQL{
 		Tx:                tx,
 		MigrationRegister: migrationRegister,
 	}
 
-	scripts := []reader.SQLScript{
+	scripts := []database.SQLScript{
 		{
 			Name:    "script_name.sql",
 			Content: "INSERT INTO USERS VALUES ('id')",
@@ -170,12 +170,12 @@ func TestProcessOneUnexecutedScriptShouldExecuteScriptContentAndNotReturnError(t
 	migrationRegister.On("IsScriptAlreadyExecuted", mock.Anything).Return(false, nil)
 	migrationRegister.On("MarkScriptAsExecuted", mock.Anything).Return(nil)
 
-	scriptExecutor := ScriptExecutor{
+	scriptExecutor := ScriptExecutorSQL{
 		Tx:                tx,
 		MigrationRegister: migrationRegister,
 	}
 
-	scripts := []reader.SQLScript{
+	scripts := []database.SQLScript{
 		{
 			Name:    "script_name.sql",
 			Content: "INSERT INTO USERS VALUES ('id')",
@@ -201,12 +201,12 @@ func TestProcessTwoUnexecutedScriptShouldExecuteScriptContentAndNotReturnError(t
 	migrationRegister.On("IsScriptAlreadyExecuted", mock.Anything).Return(false, nil)
 	migrationRegister.On("MarkScriptAsExecuted", mock.Anything).Return(nil)
 
-	scriptExecutor := ScriptExecutor{
+	scriptExecutor := ScriptExecutorSQL{
 		Tx:                tx,
 		MigrationRegister: migrationRegister,
 	}
 
-	scripts := []reader.SQLScript{
+	scripts := []database.SQLScript{
 		{
 			Name:    "script_name.sql",
 			Content: "INSERT INTO USERS VALUES ('id')",
@@ -237,12 +237,12 @@ func TestProcessOneExecutedAndOneUnexecutedScriptShouldExecuteOneScriptContentAn
 	migrationRegister := new(MigrationRegisterMock)
 	migrationRegister.On("MarkScriptAsExecuted", mock.Anything).Return(nil)
 
-	scriptExecutor := ScriptExecutor{
+	scriptExecutor := ScriptExecutorSQL{
 		Tx:                tx,
 		MigrationRegister: migrationRegister,
 	}
 
-	scripts := []reader.SQLScript{
+	scripts := []database.SQLScript{
 		{
 			Name:    "script_name.sql",
 			Content: "INSERT INTO USERS VALUES ('id')",

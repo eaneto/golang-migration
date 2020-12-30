@@ -33,3 +33,6 @@ else
     echo "Failure on migration with syntax error"
     exit -1
 fi
+
+# Stop containers
+docker-compose down

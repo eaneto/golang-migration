@@ -6,21 +6,19 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/eaneto/grotto/pkg/database"
 	_ "github.com/jackc/pgx/v4/stdlib"
 	"github.com/sirupsen/logrus"
 )
 
-// MigrationReader Basic structure for the migration script reader.
-type MigrationReader struct {
-	MigrationDirectory string
+// MigrationReader Basic interface for the migration reader.
+type MigrationReader interface {
+	ReadScriptFiles() []database.SQLScript
 }
 
-// SQLScript Represents a SQL script with the filename and content.
-type SQLScript struct {
-	// The actual SQL script content.
-	Content string
-	// The script filename with the .sql extension.
-	Name string
+// MigrationReaderFS Basic structure for the migration script file system reader.
+type MigrationReaderFS struct {
+	MigrationDirectory string
 }
 
 type ByName []os.FileInfo
@@ -31,10 +29,10 @@ func (by ByName) Swap(i, j int)      { by[i], by[j] = by[j], by[i] }
 
 // ReadScriptFiles Read all found SQL scripts and return a structure with
 // all its content.
-func (r MigrationReader) ReadScriptFiles() []SQLScript {
+func (r MigrationReaderFS) ReadScriptFiles() []database.SQLScript {
 	files := getAllScriptFiles(r.MigrationDirectory)
 
-	scripts := make([]SQLScript, len(files))
+	scripts := make([]database.SQLScript, len(files))
 	for index, file := range files {
 		content, err := ioutil.ReadFile(r.MigrationDirectory + "/" + file.Name())
 		if err != nil {
@@ -42,7 +40,7 @@ func (r MigrationReader) ReadScriptFiles() []SQLScript {
 				"file_name": file.Name(),
 			}).Fatal("File not found.\n", err)
 		}
-		script := SQLScript{
+		script := database.SQLScript{
 			Name:    file.Name(),
 			Content: string(content),
 		}

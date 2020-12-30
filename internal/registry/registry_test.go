@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/eaneto/grotto/internal/reader"
+	"github.com/eaneto/grotto/pkg/database"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -68,7 +68,7 @@ func TestSearchForMigrationNotExecutedShouldReturnIsScriptNotExecuted(t *testing
 	registry := MigrationRegisterSQL{
 		Tx: tx,
 	}
-	script := reader.SQLScript{
+	script := database.SQLScript{
 		Name:    "script_name.sql",
 		Content: "Script content",
 	}
@@ -91,7 +91,7 @@ func TestSearchForMigrationExecutedShouldReturnIsScriptExecuted(t *testing.T) {
 	registry := MigrationRegisterSQL{
 		Tx: tx,
 	}
-	script := reader.SQLScript{
+	script := database.SQLScript{
 		Name:    "script_name.sql",
 		Content: "Script content",
 	}
@@ -114,7 +114,7 @@ func TestSearchForMigrationExecutedWithErrorOnQueryShouldReturnError(t *testing.
 	registry := MigrationRegisterSQL{
 		Tx: tx,
 	}
-	script := reader.SQLScript{
+	script := database.SQLScript{
 		Name:    "script_name.sql",
 		Content: "Script content",
 	}
@@ -137,7 +137,7 @@ func TestMarkScriptAsExecutedWithSuccessShouldNotReturnError(t *testing.T) {
 	tx, _ := db.Begin()
 
 	registry := MigrationRegisterSQL{tx}
-	script := reader.SQLScript{
+	script := database.SQLScript{
 		Name:    "script_name.sql",
 		Content: "Script content",
 	}
@@ -158,7 +158,7 @@ func TestMarkScriptAsExecutedWithErrorShouldReturnError(t *testing.T) {
 	tx, _ := db.Begin()
 
 	registry := MigrationRegisterSQL{tx}
-	script := reader.SQLScript{
+	script := database.SQLScript{
 		Name:    "script_name.sql",
 		Content: "Script content",
 	}

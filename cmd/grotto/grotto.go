@@ -5,14 +5,10 @@ import (
 
 	"github.com/eaneto/grotto/pkg/connection"
 	"github.com/eaneto/grotto/pkg/processor"
-
-	_ "github.com/jackc/pgx/v4/stdlib"
 )
 
-// DATABASE_URL Basic postgres connection string.  All options are
-// replaced with command line arguments.
-const DATABASE_URL = "postgres://%s:%s@%s:%s/%s"
-
+// Run runs the main grotto program. All options are captured with te
+// command line and are used to create a new migration processor.
 func Run() {
 	user := flag.String("user", "", "Database user's name")
 	password := flag.String("password", "", "Database user's password")
@@ -23,7 +19,7 @@ func Run() {
 
 	flag.Parse()
 
-	migrationProcessor := processor.CreateProcessor(connection.DatabaseInformation{
+	migrationProcessor := processor.New(connection.DatabaseInformation{
 		User:     *user,
 		Password: *password,
 		Database: *database,

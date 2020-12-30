@@ -366,6 +366,41 @@ func TestRollbackWithSuccessShouldRollbackAndDoNothing(t *testing.T) {
 	assertDatabaseExpectations(t, dbMock)
 }
 
+func TestCommitWithErrorShouldPanic(t *testing.T) {
+	db, dbMock, _ := sqlmock.New()
+	defer db.Close()
+	dbMock.ExpectBegin().WillReturnError(errors.New("Error"))
+	tx, _ := db.Begin()
+
+	migrationRegister := new(MigrationRegisterMock)
+
+	scriptExecutor := ScriptExecutorSQL{
+		Tx:                tx,
+		MigrationRegister: migrationRegister,
+	}
+
+	assert.Panics(t, scriptExecutor.CommitTransaction)
+
+	assertDatabaseExpectations(t, dbMock)
+}
+
+func TestRollbackWithErrorShouldPanic(t *testing.T) {
+	db, dbMock, _ := sqlmock.New()
+	defer db.Close()
+	dbMock.ExpectBegin().WillReturnError(errors.New("Error"))
+	tx, _ := db.Begin()
+	migrationRegister := new(MigrationRegisterMock)
+
+	scriptExecutor := ScriptExecutorSQL{
+		Tx:                tx,
+		MigrationRegister: migrationRegister,
+	}
+
+	assert.Panics(t, scriptExecutor.RollbackTransaction)
+
+	assertDatabaseExpectations(t, dbMock)
+}
+
 func assertDatabaseExpectations(t *testing.T, mock sqlmock.Sqlmock) {
 	if err := mock.ExpectationsWereMet(); err != nil {
 		t.Errorf("Not all expectation were met: %s", err)

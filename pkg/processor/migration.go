@@ -26,8 +26,8 @@ type MigrationProcessorSQL struct {
 // replaced with command line arguments.
 const DATABASE_URL = "postgres://%s:%s@%s:%s/%s"
 
-// CreateProcessor Creates a migration processor with the given database information.
-func CreateProcessor(databaseInformation connection.DatabaseInformation, migrationDirecetory string) MigrationProcessorSQL {
+// New Creates a migration processor with the given database information.
+func New(databaseInformation connection.DatabaseInformation, migrationDirecetory string) MigrationProcessorSQL {
 	return MigrationProcessorSQL{
 		Executor: initializeExecutor(stablishConnection(databaseInformation)),
 		Reader: reader.MigrationReaderFS{

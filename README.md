@@ -1,5 +1,7 @@
 # Grotto
 
+[![codecov](https://codecov.io/gh/eaneto/grotto/branch/main/graph/badge.svg)](https://codecov.io/gh/eaneto/grotto)
+
 ![The blue grotto in Capri](https://upload.wikimedia.org/wikipedia/commons/e/eb/Heinrich_Jakob_Fried_-_Die_Blaue_Grotte_auf_Capri.jpg)
 > Painting by [Jakob Alt](https://de.wikipedia.org/wiki/Jakob_Alt)
 

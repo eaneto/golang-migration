@@ -4,6 +4,7 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/eaneto/grotto/pkg/database"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -100,4 +101,18 @@ func TestProcessingWithErrorCreatingMigrationTableShouldRollbackTransaction(t *t
 	executorMock.AssertNotCalled(t, "CommitTransaction")
 	executorMock.AssertNotCalled(t, "ProcessScript", mock.Anything)
 	readerMock.AssertNotCalled(t, "ReadScriptFiles")
+}
+
+func TestInitializeExecutorWithSuccessShouldBeginDatabaseConnection(t *testing.T) {
+	db, dbMock, _ := sqlmock.New()
+	defer db.Close()
+	dbMock.ExpectBegin()
+
+	initializeExecutor(db)
+}
+
+func assertDatabaseExpectations(t *testing.T, mock sqlmock.Sqlmock) {
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Not all expectation were met: %s", err)
+	}
 }

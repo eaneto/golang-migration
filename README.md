@@ -28,7 +28,7 @@ make
 ```bash
 docker-compose up -d
 make
-./bin/grotto -user user -password 123 -database test -dir test_migration
+./bin/grotto -user user -password 123 -database test -dir test/valid_migration
 ```
 
 

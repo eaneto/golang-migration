@@ -13,19 +13,6 @@ services:
     networks:
       - postgres-network
 
-  pgadmin:
-    container_name: migration_pgadmin
-    image: dpage/pgadmin4
-    environment:
-      PGADMIN_DEFAULT_EMAIL: "user@user.com"
-      PGADMIN_DEFAULT_PASSWORD: "user"
-    ports:
-      - 16543:80
-    depends_on:
-      - database
-    networks:
-      - postgres-network
-
 networks:
   postgres-network:
     driver: bridge

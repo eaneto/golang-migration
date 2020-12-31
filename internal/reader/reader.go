@@ -27,29 +27,24 @@ func (by ByName) Len() int           { return len(by) }
 func (by ByName) Less(i, j int) bool { return by[i].Name() < by[j].Name() }
 func (by ByName) Swap(i, j int)      { by[i], by[j] = by[j], by[i] }
 
-// ReadScriptFiles Read all found SQL scripts and return a structure with
-// all its content.
+// ReadScriptFiles Read all found SQL scripts and return a structure
+// with all its content.
 func (r MigrationReaderFS) ReadScriptFiles() []database.SQLScript {
 	files := getAllScriptFiles(r.MigrationDirectory)
 
 	scripts := make([]database.SQLScript, len(files))
 	for index, file := range files {
-		content, err := ioutil.ReadFile(r.MigrationDirectory + "/" + file.Name())
-		if err != nil {
-			logrus.WithFields(logrus.Fields{
-				"file_name": file.Name(),
-			}).Fatal("File not found.\n", err)
-		}
-		script := database.SQLScript{
+		content := getFileContent(r.MigrationDirectory, file)
+		scripts[index] = database.SQLScript{
 			Name:    file.Name(),
-			Content: string(content),
+			Content: content,
 		}
-		scripts[index] = script
 	}
 	return scripts
 }
 
-// getAllScriptFiles Get all the SQL scripts inside the migration directory.
+// getAllScriptFiles Get all the SQL scripts inside the migration
+// directory.
 func getAllScriptFiles(migrationDirectory string) []os.FileInfo {
 	files, err := ioutil.ReadDir(migrationDirectory)
 	if err != nil {
@@ -77,4 +72,16 @@ func filterSqlFiles(files []os.FileInfo) []os.FileInfo {
 		}
 	}
 	return scripts
+}
+
+// getFileContent Reads the content from a given file and logs fatal
+// if the file is unreadable.
+func getFileContent(directory string, file os.FileInfo) string {
+	content, err := ioutil.ReadFile(directory + "/" + file.Name())
+	if err != nil {
+		logrus.WithFields(logrus.Fields{
+			"file_name": file.Name(),
+		}).Fatal("File not found.\n", err)
+	}
+	return string(content)
 }

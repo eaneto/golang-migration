@@ -1,4 +1,4 @@
-package grotto
+package main
 
 import (
 	"flag"
@@ -7,9 +7,7 @@ import (
 	"github.com/eaneto/grotto/pkg/processor"
 )
 
-// Run runs the main grotto program. All options are captured with te
-// command line and are used to create a new migration processor.
-func Run() {
+func main() {
 	user := flag.String("user", "", "Database user's name")
 	password := flag.String("password", "", "Database user's password")
 	database := flag.String("database", "", "Name of the database")

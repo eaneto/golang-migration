@@ -1,10 +1,12 @@
-all:
-	rm -rf bin
+build: clean
 	mkdir -p bin
-	go build -o bin/
+	go build  -o ./bin/ -v ./cmd/grotto
 
-test:
+clean:
+	rm -rf bin
+
+test: build
 	go test -v ./...
 
-codecov:
+codecov: test
 	go test ./... -race -coverprofile=coverage.txt -covermode=atomic

@@ -5,6 +5,7 @@ import (
 
 	"github.com/eaneto/grotto/pkg/connection"
 	"github.com/eaneto/grotto/pkg/processor"
+	_ "github.com/jackc/pgx/v4/stdlib"
 )
 
 func main() {

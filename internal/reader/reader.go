@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/eaneto/grotto/pkg/database"
-	_ "github.com/jackc/pgx/v4/stdlib"
 	"github.com/sirupsen/logrus"
 )
 

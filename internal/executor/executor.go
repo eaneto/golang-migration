@@ -2,6 +2,8 @@ package executor
 
 import (
 	"database/sql"
+	"fmt"
+	"strings"
 
 	"github.com/eaneto/grotto/internal/registry"
 	"github.com/eaneto/grotto/pkg/database"
@@ -75,12 +77,16 @@ func (executor ScriptExecutorSQL) executeScriptAndMarkAsExecuted(script database
 // executeScript Executes a given SQL script.
 func executeScript(tx *sql.Tx, script database.SQLScript) error {
 	logrus.Info("Executing script: ", script.Name)
-	_, err := tx.Exec(script.Content)
-	if err != nil {
-		logrus.WithFields(logrus.Fields{
-			"script_name": script.Name,
-		}).Error("Error executing script.\n", err)
-		return err
+	for _, statement := range strings.Split(script.Content, ";") {
+		_, err := tx.Exec(statement)
+		if err != nil {
+			logrus.WithFields(logrus.Fields{
+				"script_name": script.Name,
+			}).Error("Error executing script.", err)
+			fmt.Println("Statement executed:")
+			fmt.Println(statement)
+			return err
+		}
 	}
 	return nil
 }

@@ -10,17 +10,15 @@ Basic tool to manage database migrations for PostgreSQL.
 
 ## How it works
 
-The program will read all sql files for a given directory and execute
-all of them in order. When reading the migration directory, *Grotto*
-will order every file by their names, if all the scripts use some kind
-of name versioning like,`V1_XX.sql`, `V2_XX.sql`, there won't be any
-problems with the execution order, but if they don't match any of
-these rules and just have plain text names, like, `create_table_x.sql`
-or `create_index_y.sql`, you may run into some trouble if your scripts
-must be executed in a different order.
-
-All scripts are executed inside a single transaction, so either all of
-the scripts will be executed or none.
+The program will read all sql files for a given directory, break all
+statements in the file and execute all of them in order, a transaction
+is open for each *file*. When reading the migration directory,
+*Grotto* will order every file by their names, if all the scripts use
+some kind of name versioning like,`V1_XX.sql`, `V2_XX.sql`, there
+won't be any problems with the execution order, but if they don't
+match any of these rules and just have plain text names, like,
+`create_table_x.sql` or `create_index_y.sql`, you may run into some
+trouble if your scripts must be executed in a different order.
 
 ## Usage
 

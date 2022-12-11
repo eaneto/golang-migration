@@ -6,13 +6,14 @@
 ![The blue grotto in Capri](https://upload.wikimedia.org/wikipedia/commons/e/eb/Heinrich_Jakob_Fried_-_Die_Blaue_Grotte_auf_Capri.jpg)
 > Painting by [Jakob Alt](https://de.wikipedia.org/wiki/Jakob_Alt)
 
-Basic tool to manage database migrations for PostgreSQL.
+Basic tool to manage database migrations for PostgreSQL inspired by
+[Flyway](https://flywaydb.org/).
 
 ## How it works
 
 The program will read all sql files for a given directory, break all
 statements in the file and execute all of them in order, a transaction
-is open for each *file*. When reading the migration directory,
+is open for each **file**. When reading the migration directory,
 *Grotto* will order every file by their names, if all the scripts use
 some kind of name versioning like,`V1_XX.sql`, `V2_XX.sql`, there
 won't be any problems with the execution order, but if they don't

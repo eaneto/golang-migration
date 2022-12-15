@@ -29,6 +29,12 @@ trouble if your scripts must be executed in a different order.
 make
 ```
 
+### Installation
+
+```bash
+go install ./cmd/grotto
+```
+
 ### Help
 
 ```bash
